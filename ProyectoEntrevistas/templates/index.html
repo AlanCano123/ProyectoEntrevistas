@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat con IA</title>
+    <!-- Incluyendo Bootstrap CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container mt-5">
+        <!-- Título -->
+        <h1 class="text-center">Entrenamiento para entrevista técnica</h1>
+
+        <!-- Contenedor para alinear el botón de tema y el botón de cargar preguntas -->
+        <div class="d-flex justify-content-start my-4">
+            <!-- Menú para seleccionar el tema (fijo) -->
+            <div class="dropdown mr-2">
+                <button class="btn btn-info dropdown-toggle" type="button" id="dropdownMenuButtonTemas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Seleccionar Tema
+                </button>
+                <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonTemas">
+                    <a class="dropdown-item" href="#" onclick="setOption('JAVA')">Java</a>
+                    <a class="dropdown-item" href="#" onclick="setOption('SPRING BOOT')">Spring Boot</a>
+                    <a class="dropdown-item" href="#" onclick="setOption('SQL')">SQL</a>
+                </div>
+            </div>
+
+            <!-- Botón para cargar preguntas del tema seleccionado -->
+            <button class="btn btn-success" onclick="cargarPreguntas()">Cargar preguntas</button>
+        </div>
+
+        <!-- Menú con preguntas predefinidas y cargadas dinámicamente -->
+        <div class="dropdown my-4">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButtonPreguntas" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Preguntas Comunes
+            </button>
+            <div class="dropdown-menu" aria-labelledby="dropdownMenuButtonPreguntas" id="dropdownMenuPreguntas">
+                <!-- Preguntas predefinidas y cargadas dinámicamente se mostrarán aquí -->
+                <!-- Ejemplos de preguntas predefinidas (pueden eliminarse si se cargan dinámicamente todas) -->
+                <a class="dropdown-item" href="#" onclick="setQuestion('¿Cuál es la diferencia entre una clase y un objeto en Java?')">¿Cuál es la diferencia entre una clase y un objeto en Java?</a>
+                <a class="dropdown-item" href="#" onclick="setQuestion('Explica el concepto de herencia en Java y proporciona un ejemplo')">Explica el concepto de herencia en Java y proporciona un ejemplo</a>
+            </div>
+        </div>
+    
+        <!-- Mostrar el tema seleccionado -->
+        <div class="form-group">
+            <label for="temaSeleccionado">Tema seleccionado:</label>
+            <input type="text" class="form-control" id="temaSeleccionado" placeholder="Ningún tema seleccionado" readonly>
+        </div>
+
+        <!-- Mostrar la pregunta seleccionada -->
+        <div class="form-group mt-4">
+            <label for="preguntaSeleccionada">Pregunta seleccionada:</label>
+            <input type="text" class="form-control" id="preguntaSeleccionada" placeholder="Ninguna pregunta seleccionada" readonly>
+        </div>
+
+        <!-- Cuadro de texto para ingresar consulta -->
+        <div class="form-group">
+            <label for="respuestaUsuario">Escribe tu respuesta:</label>
+            <input type="text" class="form-control" id="respuestaUsuario" placeholder="Escribe aquí...">
+        </div>
+
+        <!-- Botón para enviar la consulta -->
+        <button class="btn btn-primary" onclick="enviarConsulta()">Enviar</button>
+
+        <!-- Área donde se imprimirá la respuesta -->
+        <div class="mt-4">
+            <h5>Respuesta de la IA:</h5>
+            <p id="respuesta"></p>
+        </div>
+    </div>
+
+    <!-- Incluyendo jQuery, Popper.js y Bootstrap JS en el orden correcto -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Script JavaScript para manejar la interacción -->
+    <script>
+        let selectedQuestion = '';
+        let selectedOption = '';
+
+        function setQuestion(question) {
+            selectedQuestion = question;
+            document.getElementById('preguntaSeleccionada').value = selectedQuestion; // Muestra la pregunta seleccionada en un campo de texto
+        }
+
+        function setOption(option) {
+            selectedOption = option;
+            document.getElementById('temaSeleccionado').value = selectedOption; // Muestra la opción seleccionada en un campo de texto
+        }
+
+        function enviarConsulta() {
+            let respuestaUsuario = document.getElementById('respuestaUsuario').value.trim(); // Obtener valor y eliminar espacios en blanco
+
+            // Validar que el campo no esté vacío
+            if (!selectedQuestion) {
+                alert("Por favor, selecciona una pregunta del menú.");
+                return;
+            }
+
+            if (respuestaUsuario === '') {
+                alert("Por favor, escribe tu respuesta en el campo de texto.");
+                return;
+            }
+
+            // Combinar pregunta y respuesta del usuario
+            let consultaCompleta = selectedQuestion + " " + respuestaUsuario + " ¿Es completamente correcta la respuesta o le falta algún punto importante?";
+
+            // Realizar la solicitud AJAX al servidor
+            $.ajax({
+                url: '/chat',
+                type: 'GET',
+                data: { pregunta: consultaCompleta },
+                success: function(data) {
+                    document.getElementById('respuesta').innerText = data.respuesta;
+                },
+                error: function(err) {
+                    document.getElementById('respuesta').innerText = "Hubo un error en la consulta.";
+                }
+            });
+        }
+
+        function cargarPreguntas() {
+            let opcionTema = "Dame solo 10 preguntas sobre " + selectedOption + " y nada mas."; 
+
+            // Realizar la solicitud AJAX para obtener preguntas  
+            $.ajax({
+                url: '/chat',
+                type: 'GET',
+                data: { pregunta: opcionTema },
+                success: function(data) {
+                    let dropdownMenuPreguntas = document.getElementById('dropdownMenuPreguntas'); // Usar el ID del menú de preguntas
+                    dropdownMenuPreguntas.innerHTML = ''; // Limpiar el menú de preguntas
+
+                    // Añadir las preguntas recibidas al menú desplegable
+                    data.respuesta.split('\n').forEach(function(pregunta) {
+                        if (pregunta.trim()) {
+                            let item = document.createElement('a');
+                            item.className = 'dropdown-item';
+                            item.href = '#';
+                            item.textContent = pregunta.trim();
+                            item.onclick = function() {
+                                setQuestion(pregunta.trim());
+                            };
+                            dropdownMenuPreguntas.appendChild(item);
+                        }
+                    });
+                },
+                error: function(err) {
+                    alert("Hubo un error al cargar los temas.");
+                }
+            });
+        }
+    </script>
+</body>
+</html>
